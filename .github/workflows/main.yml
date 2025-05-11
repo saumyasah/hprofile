@@ -4,5 +4,11 @@ jobs:
   Testing:
     runs-on: ubuntu-latest
     steps:
-      - name: Testing workflow
-        run: echo "workflow works"
+      - name: Code Checkout # source code cloning
+        uses: actions/checkout@v4 # to use checkout@v4 tool from github action marketplace
+
+      - name: Maven test # to run the Maven commands
+        run: mvn test
+      
+      - name: Checkstyle Analysis # for Checkstyle 
+        run: mvn checkstyle:checkstyle
