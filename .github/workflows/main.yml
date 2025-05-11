@@ -12,3 +12,25 @@ jobs:
       
       - name: Checkstyle Analysis # for Checkstyle 
         run: mvn checkstyle:checkstyle
+      
+      - name: Set JAVA 11 # setting up JAVA as a dependency by sonar scanner
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin' # from java eclipes, you can find this in marketplace
+          java-version: '11'
+
+      - name: Setup SonarQube # Setup Sonar Scanner
+        uses: warchant/setup-sonar-scanner@v7
+
+      - name: SonarQube Scan # Run command commands of Sonar Scanner
+      # Dsonar.sources=src/ to scan the src code of app, Dsonar.junit.reportsPath will give unit test result path, Dsonar.jacoco.reportsPath will get created when mvn test is run
+        run: sonar-scanner
+             -Dsonar.host.url=${{ secrets.SONAR_URL }}
+             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
+             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+             -Dsonar.sources=src/
+             -Dsonar.junit.reportsPath=target/surefire-reports/
+             -Dsonar.jacoco.reportsPath=target/jacoco.exec
+             -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+             -Dsonar.java.binaries=target/test-classes/com/visualpathit/account
