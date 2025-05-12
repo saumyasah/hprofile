@@ -1,5 +1,7 @@
 name: CI/CD Actions
 on: workflow_dispatch
+env:
+  AWS_REGION: ap-southeast-2
 jobs:
   Testing:
     runs-on: ubuntu-latest
@@ -44,3 +46,28 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_URL }} #OPTIONAL
+
+  BUILD_AND_PUBLISH:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Checkout # source code cloning
+        uses: actions/checkout@v4 # to use checkout@v4 tool from github action marketplace
+      
+      - name: Update app.properties file
+        run: |
+          sed -i "s/^jdbc.username. *$/jdbc.username\=${{ secrets.AWS_RDS_USER }}/" src/main/resources/application.properties 
+          sed -i "s/^jdbc.password. *$/jdbc.password\=${{ secrets.RAWS_RDS_PASS }}/" src/main/resources/application.properties 
+          sed -i "s/db01/${{ secrets.AWS_RDS_ENDPOINT }}/" src/main/resources/application properties
+
+      - name: Build & Upload Image to ECR
+        uses: appleboy/docker-ecr-action@master
+        with:
+          access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_key: ${{ secrets.AWS_SECRET_KEY_ID }}
+          registry: ${{ secrets.AWS_REGISTRY }}
+          repo: actapp
+          region: ${{ secrets.AWS_REGION }}
+          auto_tag: latest,${{ github.run_number }}
+          daemon_off: false
+          dockerfile: ./Dockerfile
+          context: ./
